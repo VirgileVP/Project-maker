@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+BASE='\033[0m'
+
+fill_makefile()
+{
+	echo -e 'NAME = \n\n' > Makefile
+	echo -e 'CC = GCC' >> Makefile	
+	echo -e 'CFLAGS = -Wall -Werror -Wextra' >> Makefile
+	echo -e 'INCLUDES = $(addprefix -I, includes)' >> Makefile
+	echo -e 'CC = GCC\n' >> Makefile
+	echo -e 'LIB = libft/libft.a' >> Makefile
+	echo -e -n 'OBJ_DIR = ./objs/' >> Makefile
+	echo -e 'SRC_DIR = ./srcs/\n' >> Makefile
+	echo -e 'SRC = \n' >> Makefile
+	echo -e 'SRCS = $(addprefix $(SRC_DIR), $(SRC))' >> Makefile
+	echo -e 'OBJ = $(addprefix $(OBJ_DIR), $(SRC:.c=.o))\n\n' >> Makefile
+	echo -e 'all:$(NAME)\n\n\n' >> Makefile
+	echo -e '$(NAME):$(OBJ) $(LIB)\n		$(CC) -Llibft -lft $^ -o $@\n' >> Makefile
+	echo -e '$(OBJ_DIR)%.o:$(SRC_DIR)%.c' >> Makefile
+	echo -e '		$(CC) $(CFLAGS) $(INCLUDES) -c $^ -o $@\n' >> Makefile
+	echo -e '$(LIB):\n		make -C libft\n' >> Makefile
+	echo -e 'clean:\n		make clean -C libft\n' >> Makefile
+	echo -e 'fclean:clean\n		make fclean -C libft\n		rm -rf $(OBJ)\n' >> Makefile
+	echo -e 're:fclean\n		make all\n\n' >> Makefile
+	echo -e '.PHONY: clean fclean re all' >> Makefile
+}
+
+touch_files_and_folders()
+{
+	touch Makefile
+	fill_makefile
+	echo -e "${YELLOW} === Makefile created ===${BASE}"
+	touch auteur
+	echo $LOGIN > auteur
+	echo -e "${YELLOW} === auteur created ===${BASE}"
+	mkdir srcs
+	mkdir includes
+	echo -e "${YELLOW} === srcs/ and includes/ created ===${BASE}"
+	cd includes
+	touch "$NAME.h"
+	echo -n "#ifndef " > "$NAME.h"
+	echo -n "$NAME" | tr '[:lower:]' '[:upper:]' >> "$NAME.h"
+	echo "_H" >> "$NAME.h"
+	echo -n "# define " >> "$NAME.h"
+	echo -n "$NAME" | tr '[:lower:]' '[:upper:]' >> "$NAME.h"
+	echo "_H" >> "$NAME.h"
+	if [ $LIBFT ]
+		then
+			echo "# include \"../libft/libft.h\"" >> "$NAME.h"
+	fi
+	echo -e "\n\n#endif" >> "$NAME.h"
+	cd ..
+	echo -e "${YELLOW} === $NAME.h created ===${BASE}"
+	mkdir objs
+	echo -e "${YELLOW} === objs/ ===${BASE}"
+}
+
+clone_libft()
+{
+	git clone https://github.com/VirgileVP/libft libft
+	cd libft
+	rm -rf .git
+	cd ..
+	echo -e "${YELLOW} === libft cloned ===${BASE}"
+}
+
+commands()
+{
+	echo " Usage : ./03 [-h -p -l -L -d -r]"
+	echo "    -h : help"
+	echo "    -p [Project name] : specify project name"
+	echo "    -l [login] : specify your login"
+	echo "    -d [directory name] : add additional directory"
+	echo "    -L : cLone libft"
+	echo "    -r : create a parent directory"
+	exit 1
+}
+
+create_project()
+{
+	if [ $R ]
+		then
+			mkdir "$NAME"
+			cd "$NAME"
+	fi
+	touch_files_and_folders $NAME $LOGIN $LIBFT
+
+	if [ $LIBFT ]
+		then
+			clone_libft
+
+	fi
+	if [ -n "$ADD_DIR" ]
+		then
+			mkdir $ADD_DIR
+			echo -e "${YELLOW} === $ADD_DIR created ===${BASE}"
+	fi
+	
+	if [ $R ]
+		then
+			cd ..
+	fi
+	echo -e "${GREEN} === PROJECT CREATED ===${BASE}"
+}
+
+if [ "$#" -eq 0 ]
+	then
+		commands
+	else
+		while getopts ":p:l:d:hLr" OPTION
+		do
+			case $OPTION in
+				h)
+					commands
+					exit 1
+					;;
+				p)
+					NAME="$OPTARG"
+					;;
+				l)
+					LOGIN="$OPTARG"
+					;;
+				L)
+					LIBFT=1
+					;;
+				d)
+					ADD_DIR="$OPTARG"
+					;;
+				r)
+					R=1
+					;;
+				:)
+					echo -e "${RED} $OPTARG : Missing argument ! Check ./03 -h${BASE}"
+					exit 1
+					;;
+				\?)
+					echo -e "${RED} $OPTARG : Invalid option !${BASE}"
+					exit 1
+					;;
+			esac
+		done 2>/dev/null
+		create_project $NAME $LOGIN $LIBFT $ADDDIR $R
+		exit
+fi
