@@ -70,7 +70,7 @@ clone_libft()
 
 commands()
 {
-	echo " Usage : ./03 [-h -p -l -L -d -r]"
+	echo " Usage : ./project_maker [-h -p -l -L -d -r]"
 	echo "    -h : help"
 	echo "    -p [Project name] : specify project name"
 	echo "    -l [login] : specify your login"
